@@ -83,6 +83,11 @@
   </header>
   <div class="article-content">
     <p>
+在 emacs 中进行文本编辑时，经常为了美观和方便编辑，通过 M-q 对段落内容进行重排。这时， emacs 会自动根据
+fill-column 的大小，在合适的位置插入换行符，使得文字不会过长。这种换行称之为软换行。通常，软换行不会带来什么问题。但是在一个软件和另一个软件进行数据交换，或者一种格式转换为另一种格式的时候，这个问题就开始突显出来了。
+</p>
+
+<p>
 org-mode 作为一个能够导出成其他多种格式的强大工具，对软换行进行了格外的照顾，引入了如下一个选项，用于控制在导出时是否在软换行处产生一个换行。
 </p>
 <div class="org-src-container">
@@ -119,7 +124,7 @@ This is a test about soft line-breaks for ox. 这里有一个软换行。
 <p>
 这其实是一个国际化问题，希望 org-mode 能够尽快就该问题给出一个官方的解决方案。我目前对这个问题的解决方法就是，
 认为中文字符与中文字符之间的换行都是没有必要的，在 org-mode 完成 html 导出时，将所有的这种换行去掉。代码如下，
-就不解释了，没有难度。
+就不解释了，没有难度。采用循环的原因是因为类似 replace-regexp-in-string 这样的函数不能正确处理隔一个中文字符就有软换行这种情况。
 </p>
 
 <div class="org-src-container">
@@ -137,12 +142,14 @@ This is a test about soft line-breaks for ox. 这里有一个软换行。
   (<span style="color: #ee3b3b;">when</span> (org-export-derived-backend-p backend 'html)
     (clear-single-linebreak-in-cjk-string string)))
 
-(add-to-list 'org-export-filter-final-output-functions 'ox-html-clear-single-linebreak-for-cjk)
+(add-to-list 'org-export-filter-final-output-functions
+             'ox-html-clear-single-linebreak-for-cjk)
 </pre>
 </div>
 
 <p>
-以上代码只是通过初步测试，而且也只是很片面的考虑了我常用的几种导出格式而已，可能还存在问题，欢迎指出。
+以上代码只用于 org-mode 8.0 以上版本，对于低版本来说，可以参考<a href="http://permalink.gmane.org/gmane.emacs.orgmode/72147">此文</a>。
+该代码仅仅通过初步测试，而且也只是很片面的考虑了我常用的几种导出格式而已，可能还存在问题，欢迎指出。
 </p>
 
   </div>

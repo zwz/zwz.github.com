@@ -76,16 +76,73 @@
 
 <p>
 <p>
-org-mode 更新到8.0了，内部模块经过重写，命名也变化了不少，特别是export相关的。更新后，最直接的后遗症就是我以前的配置文件开始不能正常工作乐，需要修改。此外还发现我之前用来生成beamer的课件文件也已经不能正确产生了，需要修改文件中的一些属性语法。
+在 emacs 中进行文本编辑时，经常为了美观和方便编辑，通过 M-q 对段落内容进行重排。这时， emacs 会自动根据
+fill-column 的大小，在合适的位置插入换行符，使得文字不会过长。这种换行称之为软换行。通常，软换行不会带来什么问题。但是在一个软件和另一个软件进行数据交换，或者一种格式转换为另一种格式的时候，这个问题就开始突显出来了。
 </p>
 
 <p>
-因此就花了一些时间，将org的配置重新整理了一番。同时将导致代码缩进错误解决掉（不要将
-org-src-preserve-indentation设置为t），将影响导出tex后的编译错误解决掉（unicad导致编码的修改）。
+org-mode 作为一个能够导出成其他多种格式的强大工具，对软换行进行了格外的照顾，引入了如下一个选项，用于控制在导出时是否在软换行处产生一个换行。
+</p>
+<div class="org-src-container">
+
+<pre class="src src-org"><span style="color: #00cdcd; font-style: italic;">#+OPTIONS: \n:nil</span>
+</pre>
+</div>
+
+<p>
+显然，默认的大部分情况下，我们不希望产生一个硬换行，正如上面的设置一样。比如，如果将下面的文档导出为 html ，每个软换行都产生一个硬换行的话，结果看起来将会非常不美观，因为每一（段）行都很短。
+</p>
+<div class="org-src-container">
+
+<pre class="src src-org"><span style="color: #ffd700; font-weight: bold;">* test</span>
+This is a test about soft
+line-breaks for ox. &#36825;&#37324;&#26377;&#19968;&#20010;&#36719;
+&#25442;&#34892;&#12290;
+</pre>
+</div>
+
+<p>
+因此在默认情况下， org-mode 将软换行替换为一个空格。因此下面这个文档默认导出 html 时，其实只有一段。
+</p>
+<blockquote>
+<p>
+This is a test about soft line-breaks for ox. 这里有一个软换行。
+</p>
+</blockquote>
+
+<p>
+注意，“软”和“换”之间存在一个空格。org-mode 对软换行的这种处理是根据西方的语言特点设计的，对于中文、日文等东方语言来讲，这会产生一个不必要的空格。这个问题在新闻组里已经被多人指出，如 <a href="http://comments.gmane.org/gmane.emacs.orgmode/64469">作为一个 bug 提出</a>, <a href="http://comments.gmane.org/gmane.emacs.orgmode/74385">有截图说明</a>。
 </p>
 
 <p>
-接下来，需要对课件进行整理，因为现在org-mode将三级（及以上）标题默认导出为block。因此为了导出item，需要将这些标题改成list。
+这其实是一个国际化问题，希望 org-mode 能够尽快就该问题给出一个官方的解决方案。我目前对这个问题的解决方法就是，
+认为中文字符与中文字符之间的换行都是没有必要的，在 org-mode 完成 html 导出时，将所有的这种换行去掉。代码如下，
+就不解释了，没有难度。采用循环的原因是因为类似 replace-regexp-in-string 这样的函数不能正确处理隔一个中文字符就有软换行这种情况。
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-elisp">(<span style="color: #ee3b3b;">defun</span> <span style="color: #ffffff; font-weight: bold;">clear-single-linebreak-in-cjk-string</span> (string)
+  <span style="color: #ffa07a;">"clear single line-break between cjk characters that is usually soft line-breaks"</span>
+  (<span style="color: #ee3b3b;">let*</span> ((regexp <span style="color: #7cfc00;">"</span><span style="color: #7cfc00; font-weight: bold;">\\</span><span style="color: #7cfc00; font-weight: bold;">(</span><span style="color: #7cfc00;">[\u4E00-\u9FA5]</span><span style="color: #7cfc00; font-weight: bold;">\\</span><span style="color: #7cfc00; font-weight: bold;">)</span><span style="color: #7cfc00;">\n</span><span style="color: #7cfc00; font-weight: bold;">\\</span><span style="color: #7cfc00; font-weight: bold;">(</span><span style="color: #7cfc00;">[\u4E00-\u9FA5]</span><span style="color: #7cfc00; font-weight: bold;">\\</span><span style="color: #7cfc00; font-weight: bold;">)</span><span style="color: #7cfc00;">"</span>)
+         (start (string-match regexp string)))
+    (<span style="color: #ee3b3b;">while</span> start
+      (setq string (replace-match <span style="color: #7cfc00;">"\\1\\2"</span> nil nil string)
+            start (string-match regexp string start))))
+  string)
+
+(<span style="color: #ee3b3b;">defun</span> <span style="color: #ffffff; font-weight: bold;">ox-html-clear-single-linebreak-for-cjk</span> (string backend info)
+  (<span style="color: #ee3b3b;">when</span> (org-export-derived-backend-p backend 'html)
+    (clear-single-linebreak-in-cjk-string string)))
+
+(add-to-list 'org-export-filter-final-output-functions
+             'ox-html-clear-single-linebreak-for-cjk)
+</pre>
+</div>
+
+<p>
+以上代码只用于 org-mode 8.0 以上版本，对于低版本来说，可以参考<a href="http://permalink.gmane.org/gmane.emacs.orgmode/72147">此文</a>。
+该代码仅仅通过初步测试，而且也只是很片面的考虑了我常用的几种导出格式而已，可能还存在问题，欢迎指出。
 </p>
 
 </p>
@@ -113,7 +170,7 @@ org-src-preserve-indentation设置为t），将影响导出tex后的编译错误
         <h5>最新文章</h5>
         <div id="recent-posts">
           <ul>
-            <li><a href="./posts/2013/08/30_org-mode-4e4b66f465b0540e905775c7.html">org-mode 之更新后遗症</a></li> <li><a href="./posts/2013/08/30_89e351b36362884c7b265728-org-mode-5bfc51fa-html-65f6768495ee9898-3aorgmode3aox-html3a.html">解决换行符在 org-mode 导出 html 时的问题                         :orgmode:ox-html:</a></li> <li><a href="./posts/2013/01/31_4f7f7528-o-blog-67845efa7f517ad9.html">使用 o-blog 构建网站</a></li>
+            <li><a href="./posts/2013/08/30_89e351b36362884c7b265728-org-mode-5bfc51fa-html-65f6768495ee9898-3aorgmode3aox-html3a.html">解决换行符在 org-mode 导出 html 时的问题                         :orgmode:ox-html:</a></li> <li><a href="./posts/2013/05/28_org-mode-4e4b66f465b0540e905775c7.html">org-mode 之更新后遗症</a></li> <li><a href="./posts/2013/01/31_4f7f7528-o-blog-67845efa7f517ad9.html">使用 o-blog 构建网站</a></li>
           </ul>
         </div>
 	    <h5>标签</h5>
