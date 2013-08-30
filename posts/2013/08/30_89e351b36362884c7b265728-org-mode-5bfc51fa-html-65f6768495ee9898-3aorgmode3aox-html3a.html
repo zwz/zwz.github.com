@@ -2,7 +2,7 @@
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8"/>
-    <title>使用 o-blog 构建网站 | zwz's</title>
+    <title>解决换行符在 org-mode 导出 html 时的问题                         :orgmode:ox-html: | zwz's</title>
     <link rel="shortcut icon" href="/static/favicon.ico" />
     <link rel="stylesheet" type="text/less" href="../../../style/less/o-blog.less"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -59,23 +59,23 @@
     <div class="page-header">
       <div class="row">
 	<div class="date span1">
-	  <div class=" date-d">31</div>
-	  <div class=" date-m"><a href="../../../posts/2013/01/index.html">1月</a></div>
+	  <div class=" date-d">30</div>
+	  <div class=" date-m"><a href="../../../posts/2013/08/index.html">8月</a></div>
 	  <div class=" date-y"><a href="../../../posts/2013/index.html">2013</a>
 	  </div>
 	</div>
 	<div class="span1">
 	  <div class="qr-code">
-  <img style="min-width:90px; min-height:90px; max-width:90px; max-height:90px;" src="http://chart.apis.google.com/chart?chs=90x90&cht=qr&chld=|0&chl=http%3A%2F%2Fzjut.in%3A65011%2Fposts%2F2013%2F01%2F31_4f7f7528-o-blog-67845efa7f517ad9.html"
+  <img style="min-width:90px; min-height:90px; max-width:90px; max-height:90px;" src="http://chart.apis.google.com/chart?chs=90x90&cht=qr&chld=|0&chl=http%3A%2F%2Fzjut.in%3A65011%2Fposts%2F2013%2F08%2F30_89e351b36362884c7b265728-org-mode-5bfc51fa-html-65f6768495ee9898-3aorgmode3aox-html3a.html"
        alt="qr-code" />
 </div>
 
 	</div>
-	<h1 class="offset2">使用 o-blog 构建网站</h1>
+	<h1 class="offset2">解决换行符在 org-mode 导出 html 时的问题                         :orgmode:ox-html:</h1>
       </div>
       <nav>
 	<ul class="pager">
-	  <li class="previous">&nbsp;</li><li class="next" style="text-align: right;"><a href="../../../posts/2013/08/30_89e351b36362884c7b265728-org-mode-5bfc51fa-html-65f6768495ee9898-3aorgmode3aox-html3a.html">解决换行符在 org-mode 导出 html 时的问题                         :orgmode:ox-html:&nbsp;<i class="icon-chevron-right"></i></a></li>
+	  <li class="previous"><a href="../../../posts/2013/01/31_4f7f7528-o-blog-67845efa7f517ad9.html"><i class="icon-chevron-left"></i>&nbsp;使用 o-blog 构建网站</a></li><li class="next" style="text-align: right;"><a href="../../../posts/2013/08/30_org-mode-4e4b66f465b0540e905775c7.html">org-mode 之更新后遗症&nbsp;<i class="icon-chevron-right"></i></a></li>
 	</ul>
       </nav>
     </div>
@@ -83,13 +83,66 @@
   </header>
   <div class="article-content">
     <p>
-发现 o-blog 还是非常不错的，至少界面也比较美观。开始尝试通过修改 sample.org 来构建自己的网站。
-粗略的看来，整个结构还是比较清晰的，很容易搞清楚自己应该修改哪些部分，从而获得自己想要的效果。
+org-mode 作为一个能够导出成其他多种格式的强大工具，对软换行进行了格外的照顾，引入了如下一个选项，用于控制在导出时是否在软换行处产生一个换行。
 </p>
+<div class="org-src-container">
 
+<pre class="src src-org"><span style="color: #00cdcd; font-style: italic;">#+OPTIONS: \n:nil</span>
+</pre>
+</div>
 
 <p>
-但是只能单文件，这让人比较郁闷；而且每次发布的时候，似乎所有的文章都会更新，这不仅浪费时间，而且也导致不必要的数据同步。
+显然，默认的大部分情况下，我们不希望产生一个硬换行，正如上面的设置一样。比如，如果将下面的文档导出为 html ，每个软换行都产生一个硬换行的话，结果看起来将会非常不美观，因为每一（段）行都很短。
+</p>
+<div class="org-src-container">
+
+<pre class="src src-org"><span style="color: #ffd700; font-weight: bold;">* test</span>
+This is a test about soft
+line-breaks for ox. &#36825;&#37324;&#26377;&#19968;&#20010;&#36719;
+&#25442;&#34892;&#12290;
+</pre>
+</div>
+
+<p>
+因此在默认情况下， org-mode 将软换行替换为一个空格。因此下面这个文档默认导出 html 时，其实只有一段。
+</p>
+<blockquote>
+<p>
+This is a test about soft line-breaks for ox. 这里有一个软换行。
+</p>
+</blockquote>
+
+<p>
+注意，“软”和“换”之间存在一个空格。org-mode 对软换行的这种处理是根据西方的语言特点设计的，对于中文、日文等东方语言来讲，这会产生一个不必要的空格。这个问题在新闻组里已经被多人指出，如 <a href="http://comments.gmane.org/gmane.emacs.orgmode/64469">作为一个 bug 提出</a>, <a href="http://comments.gmane.org/gmane.emacs.orgmode/74385">有截图说明</a>。
+</p>
+
+<p>
+这其实是一个国际化问题，希望 org-mode 能够尽快就该问题给出一个官方的解决方案。我目前对这个问题的解决方法就是，
+认为中文字符与中文字符之间的换行都是没有必要的，在 org-mode 完成 html 导出时，将所有的这种换行去掉。代码如下，
+就不解释了，没有难度。
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-elisp">(<span style="color: #ee3b3b;">defun</span> <span style="color: #ffffff; font-weight: bold;">clear-single-linebreak-in-cjk-string</span> (string)
+  <span style="color: #ffa07a;">"clear single line-break between cjk characters that is usually soft line-breaks"</span>
+  (<span style="color: #ee3b3b;">let*</span> ((regexp <span style="color: #7cfc00;">"</span><span style="color: #7cfc00; font-weight: bold;">\\</span><span style="color: #7cfc00; font-weight: bold;">(</span><span style="color: #7cfc00;">[\u4E00-\u9FA5]</span><span style="color: #7cfc00; font-weight: bold;">\\</span><span style="color: #7cfc00; font-weight: bold;">)</span><span style="color: #7cfc00;">\n</span><span style="color: #7cfc00; font-weight: bold;">\\</span><span style="color: #7cfc00; font-weight: bold;">(</span><span style="color: #7cfc00;">[\u4E00-\u9FA5]</span><span style="color: #7cfc00; font-weight: bold;">\\</span><span style="color: #7cfc00; font-weight: bold;">)</span><span style="color: #7cfc00;">"</span>)
+         (start (string-match regexp string)))
+    (<span style="color: #ee3b3b;">while</span> start
+      (setq string (replace-match <span style="color: #7cfc00;">"\\1\\2"</span> nil nil string)
+            start (string-match regexp string start))))
+  string)
+
+(<span style="color: #ee3b3b;">defun</span> <span style="color: #ffffff; font-weight: bold;">ox-html-clear-single-linebreak-for-cjk</span> (string backend info)
+  (<span style="color: #ee3b3b;">when</span> (org-export-derived-backend-p backend 'html)
+    (clear-single-linebreak-in-cjk-string string)))
+
+(add-to-list 'org-export-filter-final-output-functions 'ox-html-clear-single-linebreak-for-cjk)
+</pre>
+</div>
+
+<p>
+以上代码只是通过初步测试，而且也只是很片面的考虑了我常用的几种导出格式而已，可能还存在问题，欢迎指出。
 </p>
 
   </div>
@@ -97,11 +150,11 @@
   <footer class="article-footer">
     <nav class="tag-cloud">
       <ul>
-	<li class="label label-inverse small"><a href="../../../tags/emacs.html">emacs</a></li>
+
       </ul>
     </nav>
     <span class="muted">
-      发布于 <time datetime="2013-01-31T23:52:00Z"> 2013-01-31 23:52</time>
+      发布于 <time datetime="2013-08-30T21:11:00Z"> 2013-08-30 21:11</time>
     </span>
   </footer>
   </div>
@@ -109,7 +162,7 @@
 <script type="text/javascript">
   /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
   var disqus_shortname = 'izwz'; // required: replace example with your forum shortname
-  var disqus_url = 'http://zjut.in:65011/posts/2013/01/31_4f7f7528-o-blog-67845efa7f517ad9.html';
+  var disqus_url = 'http://zjut.in:65011/posts/2013/08/30_89e351b36362884c7b265728-org-mode-5bfc51fa-html-65f6768495ee9898-3aorgmode3aox-html3a.html';
 
   /* * * DON'T EDIT BELOW THIS LINE * * */
   (function() {
